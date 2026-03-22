@@ -9,7 +9,10 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <!-- Non-render-blocking font load: load as print, swap to all once loaded -->
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=DM+Sans:wght@300;400;500&display=swap" />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" /></noscript>
 
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -60,50 +63,59 @@
       position: fixed;
       top: 0;
       left: 50%;
-      transform: translateX(-50%);
+      /* All positional changes go through transform — never layout-triggering top/width */
+      transform: translateX(-50%) translateY(0px);
+      transform-origin: top center;
       z-index: 100;
       display: flex;
       align-items: center;
       justify-content: center;
 
-      /* default: transparent full-width bar, no visible chrome */
-      width: 100vw;
+      width: 820px;
+      max-width: 92vw;
       padding: 22px 48px;
       background: transparent;
-      backdrop-filter: blur(0px);
-      -webkit-backdrop-filter: blur(0px);
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
       border: 1px solid transparent;
-      border-radius: 0px;
+      border-radius: 999px;
       box-shadow: none;
 
+      /* Only GPU-composited properties — zero layout reflows on scroll */
       transition:
-        top            1.1s cubic-bezier(0.34, 1.05, 0.64, 1),
-        width          1.1s cubic-bezier(0.34, 1.05, 0.64, 1),
-        padding        0.9s ease,
-        background     0.9s ease,
-        border-color   0.8s ease,
-        border-radius  1.1s cubic-bezier(0.34, 1.05, 0.64, 1),
-        box-shadow     0.9s ease;
+        transform       1.0s cubic-bezier(0.34, 1.05, 0.64, 1),
+        padding         0.9s ease,
+        background      0.9s ease,
+        border-color    0.8s ease,
+        border-radius   1.0s cubic-bezier(0.34, 1.05, 0.64, 1),
+        box-shadow      0.9s ease,
+        backdrop-filter 0.9s ease;
+
+      will-change: transform;
     }
 
     nav.scrolled {
-      top: 20px;
-      width: 820px;
+      transform: translateX(-50%) translateY(20px);
       padding: 10px 12px 10px 26px;
       background: rgba(18, 18, 30, 0.6);
-      backdrop-filter: blur(28px) saturate(180%);
-      -webkit-backdrop-filter: blur(28px) saturate(180%);
+      backdrop-filter: blur(20px) saturate(160%);
+      -webkit-backdrop-filter: blur(20px) saturate(160%);
       border: 1px solid rgba(200, 255, 0, 0.2);
       border-radius: 999px;
       flex-wrap: nowrap;
       box-shadow:
-        0 20px 60px rgba(0,0,0,0.6),
-        inset 0 1px 0 rgba(255,255,255,0.1),
-        inset 0 -1px 0 rgba(0,0,0,0.2);
+        0 16px 48px rgba(0,0,0,0.5),
+        inset 0 1px 0 rgba(255,255,255,0.08);
     }
 
     @media (max-width: 900px) {
-      nav.scrolled { width: 90vw; }
+      nav { width: 92vw; }
+      /* Reduce blur on mobile — big GPU win */
+      nav.scrolled {
+        backdrop-filter: blur(12px) saturate(140%);
+        -webkit-backdrop-filter: blur(12px) saturate(140%);
+        box-shadow: 0 10px 32px rgba(0,0,0,0.45);
+      }
     }
 
     /* Logo — hidden until pill */
@@ -379,8 +391,19 @@
     /* ── WebGL Shader ──────────────────────────────── */
     (function () {
       const canvas = document.getElementById('shader-canvas');
-      const gl = canvas.getContext('webgl');
+      const gl = canvas.getContext('webgl', {
+        powerPreference: 'low-power',   // tells GPU to use efficient mode on mobile
+        antialias: false                 // no MSAA — not needed for this shader
+      });
       if (!gl) return;
+
+      const isMobile = window.innerWidth < 768;
+
+      /* Mobile: cap at 2× DPR (same as desktop) — full sharpness, other optimisations carry the load */
+      const DPR = Math.min(window.devicePixelRatio || 1, 2);
+
+      /* Fewer lines on mobile — still looks good */
+      const linesPerGroup = isMobile ? 10 : 20;
 
       const vsSource = `
         attribute vec4 aVertexPosition;
@@ -388,18 +411,15 @@
       `;
 
       const fsSource = `
-        precision highp float;
+        /* mediump on mobile = 16-bit math, ~2× faster than highp on most mobile GPUs */
+        precision ${isMobile ? 'mediump' : 'highp'} float;
         uniform vec2  iResolution;
         uniform float iTime;
 
         const float overallSpeed       = 0.28;
         const float gridSmoothWidth    = 0.015;
-        const float axisWidth          = 0.05;
-        const float majorLineWidth     = 0.025;
-        const float minorLineWidth     = 0.0125;
         const float scale              = 5.0;
-        const vec4  lineColor          = vec4(0.784, 1.0,   0.0,   1.0); /* Signal Green  */
-        const vec4  accentColor        = vec4(0.784, 1.0,   0.0,   1.0); /* Signal Green  */
+        const vec4  lineColor          = vec4(0.784, 1.0, 0.0, 1.0);
         const float minLineWidth       = 0.008;
         const float maxLineWidth       = 0.22;
         const float lineSpeed          = 1.0  * overallSpeed;
@@ -412,7 +432,7 @@
         const float offsetSpeed        = 1.33 * overallSpeed;
         const float minOffsetSpread    = 0.6;
         const float maxOffsetSpread    = 2.0;
-        const int   linesPerGroup      = 20;
+        const int   linesPerGroup      = ${linesPerGroup};
 
         #define drawCircle(pos,radius,coord) smoothstep(radius+gridSmoothWidth,radius,length(coord-(pos)))
         #define drawSmoothLine(pos,hw,t)     smoothstep(hw,0.0,abs(pos-(t)))
@@ -435,7 +455,6 @@
           space.y += random(space.x*warpFrequency+iTime*warpSpeed)*warpAmplitude*(0.5+hFade);
           space.x += random(space.y*warpFrequency+iTime*warpSpeed+2.0)*warpAmplitude*hFade;
 
-          /* Obsidian → Deep Navy base */
           vec4 bg = mix(
             vec4(0.039,0.039,0.059,1.0),
             vec4(0.102,0.102,0.18, 1.0),
@@ -455,14 +474,11 @@
                          + drawCrispLine(lp,hw*0.15,space.y);
             float cx     = mod(float(l)+iTime*lineSpeed,25.0)-12.0;
             vec2  cp     = vec2(cx,getPlasmaY(cx,hFade,off));
-            float circle = drawCircle(cp,0.01,space)*4.0;
-            line += circle;
-            vec4 col = mix(lineColor,accentColor,step(0.87,rand));
-            lines   += line*col*rand;
+            line += drawCircle(cp,0.01,space)*4.0;
+            lines += line*lineColor*rand;
           }
 
-          vec4 color = bg;
-          color     *= vFade;
+          vec4 color = bg * vFade;
           color.a    = 1.0;
           color     += lines;
           gl_FragColor = color;
@@ -474,8 +490,7 @@
         gl.shaderSource(s, src);
         gl.compileShader(s);
         if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
-          console.error(gl.getShaderInfoLog(s));
-          return null;
+          console.error(gl.getShaderInfoLog(s)); return null;
         }
         return s;
       }
@@ -494,24 +509,41 @@
       const uTime= gl.getUniformLocation(prog, 'iTime');
 
       function resize() {
-        const dpr = window.devicePixelRatio || 1;
-        canvas.width  = window.innerWidth  * dpr;
-        canvas.height = window.innerHeight * dpr;
+        canvas.width  = window.innerWidth  * DPR;
+        canvas.height = window.innerHeight * DPR;
         canvas.style.width  = window.innerWidth  + 'px';
         canvas.style.height = window.innerHeight + 'px';
         gl.viewport(0, 0, canvas.width, canvas.height);
       }
-      window.addEventListener('resize', resize);
+      window.addEventListener('resize', resize, { passive: true });
       resize();
 
-      const isMobile = window.innerWidth < 768;
-      const fpsTarget = isMobile ? 30 : 60;
-      const fpsInterval = 1000 / fpsTarget;
+      /* FPS cap: 20fps on mobile is plenty for a background effect */
+      const fpsInterval = isMobile ? 1000 / 20 : 1000 / 60;
       let lastFrame = 0;
+
+      /*
+       * KEY FIX: when hero scrolls out of view, completely detach the canvas
+       * from the fixed layer by switching position to absolute + hiding it.
+       * This removes it from the compositor entirely — no more scroll compositing tax.
+       */
+      let heroGone = false;
+      const heroSection = document.getElementById('hero');
+      new IntersectionObserver(entries => {
+        const visible = entries[0].isIntersecting;
+        if (!visible && !heroGone) {
+          heroGone = true;
+          canvas.style.display = 'none'; // remove from compositor layer completely
+        } else if (visible && heroGone) {
+          heroGone = false;
+          canvas.style.display = 'block';
+        }
+      }, { threshold: 0 }).observe(heroSection);
 
       const t0 = Date.now();
       (function loop(ts) {
         requestAnimationFrame(loop);
+        if (heroGone) return;
         if (ts - lastFrame < fpsInterval) return;
         lastFrame = ts;
         const t = (Date.now() - t0) / 1000;
@@ -531,6 +563,7 @@
     #impact {
       position: relative;
       z-index: 10;
+      contain: layout paint;
       background: linear-gradient(to bottom, rgba(10,10,15,0) 0%, #0d0d12 12%, #0d0d12 100%);
       padding: 160px 52px 120px;
     }
@@ -589,6 +622,7 @@
       opacity: 0;
       transform: translateY(20px);
       transition: opacity 0.7s ease, transform 0.7s ease;
+      will-change: transform, opacity;
     }
     .stat-card:first-child { border-radius: 8px 0 0 8px; }
     .stat-card:last-child  { border-radius: 0 8px 8px 0; }
@@ -748,6 +782,7 @@
   <style>
     #services {
       position: relative; z-index: 10;
+      contain: layout paint;
       background: var(--color-obsidian);
       padding: 160px 52px 140px;
       overflow: hidden;
@@ -811,6 +846,7 @@
       opacity: 0; transform: translateY(28px);
       transition: opacity 0.65s ease, transform 0.65s ease,
         background 0.3s ease, border-color 0.3s ease;
+      will-change: transform, opacity;
     }
     .service-card:nth-child(1) { border-radius: 8px 0 0 0; }
     .service-card:nth-child(2) { border-radius: 0 8px 0 0; }
@@ -993,6 +1029,7 @@
   <style>
     #about {
       position: relative; z-index: 10;
+      contain: layout paint;
       background: var(--color-warm-white);
       padding: 160px 52px 140px;
       overflow: hidden;
@@ -1112,6 +1149,7 @@
       opacity: 0;
       transform: translateY(32px);
       transition: opacity 0.75s ease, transform 0.75s ease;
+      will-change: transform, opacity;
     }
     .about-card.visible {
       opacity: 1;
@@ -1243,6 +1281,7 @@
       opacity: 0;
       transform: translateX(-28px);
       transition: opacity 0.75s ease 0.1s, transform 0.75s ease 0.1s;
+      will-change: transform, opacity;
     }
     .about-left-inner.visible {
       opacity: 1;
@@ -1353,8 +1392,10 @@
     (function() {
       const nav = document.getElementById('mainNav');
       let scrolled = false;
+      let rafPending = false;
 
       function update() {
+        rafPending = false;
         const y = window.scrollY;
         if (!scrolled && y > 60) {
           scrolled = true;
@@ -1365,7 +1406,13 @@
         }
       }
 
-      window.addEventListener('scroll', update, { passive: true });
+      window.addEventListener('scroll', () => {
+        if (!rafPending) {
+          rafPending = true;
+          requestAnimationFrame(update);
+        }
+      }, { passive: true });
+
       update();
     })();
 
@@ -1382,23 +1429,20 @@
         if (triggered) return;
         triggered = true;
 
-        /* Expand area fill and line in sync with a slower cubic easeInOut */
+        /* Expand area fill — cache total width to avoid forced reflow each frame */
         areaRect.setAttribute('width', '0');
         let start = null;
-        const dur = 4500; // Increased duration for a slower animation
-        
+        const dur = 4500;
+        const totalWidth = 960; // cached — no DOM read inside the loop
+
         function expandArea(now) {
           if (!start) start = now;
           const p = Math.min((now - start) / dur, 1);
-          
-          // Cubic easing for a smoother start and end
           const ease = p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
-          
-          areaRect.setAttribute('width', ease * 960);
-          
+          areaRect.setAttribute('width', ease * totalWidth);
           if (p < 1) requestAnimationFrame(expandArea);
         }
-        
+
         requestAnimationFrame(expandArea);
 
         /* Dots fade in slowly and staggered (timing adjusted for the longer 4.5s duration) */
@@ -1425,6 +1469,7 @@
   <style>
     #contact {
       position: relative; z-index: 10;
+      contain: layout paint;
       background: var(--color-obsidian);
       padding: 160px 52px 140px;
       overflow: hidden;
@@ -2144,14 +2189,15 @@
     const SANITY_DATASET    = 'production';
     /* ══════════════════════════════════════════════════════ */
 
-    (function () {
+    /* Defer Sanity fetch until browser is idle — breaks it off the critical network chain */
+    function loadSanityStats() {
       const query    = encodeURIComponent('*[_type == "impactStats"][0]{stats}');
       const url      = `https://${SANITY_PROJECT_ID}.api.sanity.io/v2021-10-21/data/query/${SANITY_DATASET}?query=${query}`;
 
       fetch(url)
         .then(r => r.json())
         .then(({ result }) => {
-          if (!result || !result.stats) return; // fallback to hardcoded values
+          if (!result || !result.stats) return;
           result.stats.forEach((stat, i) => {
             const numEl   = document.getElementById(`stat-${i}-number`);
             const labelEl = document.getElementById(`stat-${i}-label`);
@@ -2160,7 +2206,14 @@
           });
         })
         .catch(() => { /* silently fall back to hardcoded values */ });
-    })();
+    }
+
+    /* requestIdleCallback with setTimeout fallback for Safari */
+    if ('requestIdleCallback' in window) {
+      requestIdleCallback(loadSanityStats, { timeout: 3000 });
+    } else {
+      setTimeout(loadSanityStats, 1000);
+    }
   </script>
 
 </body>

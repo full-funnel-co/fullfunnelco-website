@@ -724,20 +724,20 @@
 
     <div class="stats-row">
       <div class="stat-card" style="transition-delay:0.1s">
-        <div class="stat-number">20+</div>
-        <div class="stat-label">Brands Worked With</div>
+        <div class="stat-number" id="stat-0-number">20+</div>
+        <div class="stat-label"  id="stat-0-label">Brands Worked With</div>
       </div>
       <div class="stat-card" style="transition-delay:0.2s">
-        <div class="stat-number">4.8×</div>
-        <div class="stat-label">Average ROAS</div>
+        <div class="stat-number" id="stat-1-number">4.8×</div>
+        <div class="stat-label"  id="stat-1-label">Average ROAS</div>
       </div>
       <div class="stat-card" style="transition-delay:0.3s">
-        <div class="stat-number">₹12Cr</div>
-        <div class="stat-label">Ad Spend Managed</div>
+        <div class="stat-number" id="stat-2-number">₹12Cr</div>
+        <div class="stat-label"  id="stat-2-label">Ad Spend Managed</div>
       </div>
       <div class="stat-card" style="transition-delay:0.4s">
-        <div class="stat-number">₹57Cr</div>
-        <div class="stat-label">Revenue Generated</div>
+        <div class="stat-number" id="stat-3-number">₹57Cr</div>
+        <div class="stat-label"  id="stat-3-label">Revenue Generated</div>
       </div>
     </div>
 
@@ -2134,6 +2134,32 @@
         const el = document.getElementById(id);
         if (el) el.href = url;
       });
+    })();
+  </script>
+  <script>
+    /* ╔══════════════════════════════════════════════════════╗
+       ║   SANITY CONFIG — only edit these two values        ║
+       ╚══════════════════════════════════════════════════════╝ */
+    const SANITY_PROJECT_ID = 'uuubu84c';
+    const SANITY_DATASET    = 'production';
+    /* ══════════════════════════════════════════════════════ */
+
+    (function () {
+      const query    = encodeURIComponent('*[_type == "impactStats"][0]{stats}');
+      const url      = `https://${SANITY_PROJECT_ID}.api.sanity.io/v2021-10-21/data/query/${SANITY_DATASET}?query=${query}`;
+
+      fetch(url)
+        .then(r => r.json())
+        .then(({ result }) => {
+          if (!result || !result.stats) return; // fallback to hardcoded values
+          result.stats.forEach((stat, i) => {
+            const numEl   = document.getElementById(`stat-${i}-number`);
+            const labelEl = document.getElementById(`stat-${i}-label`);
+            if (numEl)   numEl.textContent   = stat.number;
+            if (labelEl) labelEl.textContent = stat.label;
+          });
+        })
+        .catch(() => { /* silently fall back to hardcoded values */ });
     })();
   </script>
 

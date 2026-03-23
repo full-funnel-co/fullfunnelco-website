@@ -981,9 +981,9 @@
           <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
         </div>
         <h3 class="card-title">Product Visuals</h3>
-        <p class="card-desc">High-quality, conversion-focused product imagery designed to enhance perception, build trust, and support buying decisions.</p>
+        <p class="card-desc">High-quality, AI-generated product imagery designed to enhance perception, build trust, and support buying decisions — without the cost or time of a shoot.</p>
         <div class="card-tags">
-          <span class="card-tag">Photography</span>
+          <span class="card-tag">Studio-Quality AI</span>
           <span class="card-tag">Brand Perception</span>
           <span class="card-tag">Trust Building</span>
         </div>
@@ -1268,10 +1268,9 @@
       stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
     }
 
-    /* ── Floating signal chip — decorative ── */
+    /* ── Signal chip — inside card overlay ── */
     .about-chip {
-      position: absolute;
-      bottom: -18px; left: -18px;
+      display: inline-block;
       background: var(--color-signal);
       color: var(--color-obsidian);
       font-family: var(--font-body);
@@ -1281,7 +1280,7 @@
       border-radius: 100px;
       box-shadow: 0 8px 28px rgba(200,255,0,0.35);
       white-space: nowrap;
-      z-index: 3;
+      margin-top: 14px;
     }
     /* ── About scroll reveal for left col ── */
     .about-left-inner {
@@ -1301,7 +1300,7 @@
         grid-template-columns: 1fr;
         gap: 64px;
       }
-      .about-chip { bottom: -14px; left: 14px; }
+
     }
   </style>
 
@@ -1356,13 +1355,11 @@
               <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor"/></svg>
               <span id="about-instagram-handle">@fullfunnelco</span>
             </a>
+            <div class="about-chip">D2C Growth Partner</div>
           </div>
 
         </div>
         </div>
-
-        <!-- Floating tag chip -->
-        <div class="about-chip">D2C Growth Partner</div>
       </div>
 
     </div>

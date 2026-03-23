@@ -365,8 +365,8 @@
   <section id="hero">
     <div class="hero-eyebrow">
       <span class="eyebrow-pill">Performance Marketing</span>
-      <span class="eyebrow-pill muted">Paid Ads</span>
       <span class="eyebrow-pill muted">Shopify Development</span>
+      <span class="eyebrow-pill muted">Conversion Strategy</span>
     </div>
 
     <h1 class="hero-headline">
@@ -875,10 +875,10 @@
     .card-number {
       position: absolute; top: 36px; right: 40px;
       font-family: var(--font-display); font-size: 80px; font-weight: 700;
-      line-height: 1; color: rgba(200,255,0,0.04);
+      line-height: 1; color: rgba(245,242,235,0.1);
       letter-spacing: -0.02em; user-select: none; transition: color 0.3s;
     }
-    .service-card:hover .card-number { color: rgba(200,255,0,0.07); }
+    .service-card:hover .card-number { color: rgba(200,255,0,0.15); }
     .card-icon-wrap {
       display: inline-flex; align-items: center; justify-content: center;
       width: 50px; height: 50px;
@@ -1144,7 +1144,6 @@
     .about-card {
       background: var(--color-obsidian);
       border-radius: 20px;
-      padding: 52px 48px 48px;
       border: 1px solid var(--color-charcoal);
       position: relative;
       overflow: hidden;
@@ -1158,22 +1157,60 @@
       transform: translateY(0);
     }
 
-    /* Signal green glow in the corner of the card */
-    .about-card::before {
-      content: '';
-      position: absolute;
-      top: -60px; right: -60px;
-      width: 220px; height: 220px;
-      background: radial-gradient(circle, rgba(200,255,0,0.12) 0%, transparent 70%);
-      pointer-events: none;
-    }
     /* Thin signal green top border accent */
     .about-card::after {
       content: '';
       position: absolute;
-      top: 0; left: 48px; right: 48px; height: 2px;
+      top: 0; left: 0; right: 0; height: 2px;
       background: linear-gradient(90deg, var(--color-signal), rgba(200,255,0,0.2));
-      border-radius: 0 0 2px 2px;
+      z-index: 2;
+    }
+
+    /* ── Photo area ── */
+    .about-photo-wrap {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 4 / 5;
+      overflow: hidden;
+      background: var(--color-charcoal);
+    }
+    .about-photo-wrap img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      object-position: center top;
+      display: block;
+      transition: transform 0.6s ease;
+    }
+    .about-card:hover .about-photo-wrap img {
+      transform: scale(1.03);
+    }
+    /* Gradient fade into card bottom */
+    .about-photo-wrap::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 55%;
+      background: linear-gradient(to top, var(--color-obsidian) 0%, transparent 100%);
+      pointer-events: none;
+    }
+    /* Placeholder shown before image loads */
+    .about-photo-placeholder {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--color-charcoal);
+    }
+    .about-photo-placeholder svg {
+      width: 64px; height: 64px;
+      stroke: rgba(136,134,128,0.3); fill: none;
+      stroke-width: 1.2; stroke-linecap: round; stroke-linejoin: round;
+    }
+
+    /* ── Name / role overlay at base of photo ── */
+    .about-card-overlay {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      padding: 0 28px 28px;
+      z-index: 2;
     }
 
     .about-card-label {
@@ -1181,7 +1218,7 @@
       font-size: 10px; font-weight: 500;
       letter-spacing: 0.14em; text-transform: uppercase;
       color: var(--color-signal);
-      margin-bottom: 28px;
+      margin-bottom: 10px;
       display: flex; align-items: center; gap: 8px;
     }
     .about-card-label::before {
@@ -1194,63 +1231,32 @@
 
     .about-name {
       font-family: var(--font-display);
-      font-size: 44px; font-weight: 700;
+      font-size: 40px; font-weight: 700;
       text-transform: uppercase; line-height: 0.95;
       letter-spacing: -0.01em;
       color: var(--color-warm-white);
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
 
     .about-role {
       font-family: var(--font-body);
       font-size: 13px; font-weight: 400;
-      color: var(--color-slate);
+      color: rgba(245,242,235,0.55);
       letter-spacing: 0.04em;
-      margin-bottom: 40px;
-    }
-
-    .about-pillars {
-      display: flex; flex-direction: column; gap: 14px;
-      margin-bottom: 40px;
-    }
-
-    .about-pillar {
-      display: flex; align-items: center; gap: 14px;
-    }
-    .pillar-icon {
-      width: 36px; height: 36px; flex-shrink: 0;
-      border-radius: 8px;
-      border: 1px solid rgba(200,255,0,0.2);
-      background: rgba(200,255,0,0.06);
-      display: flex; align-items: center; justify-content: center;
-    }
-    .pillar-icon svg {
-      width: 16px; height: 16px;
-      stroke: var(--color-signal); fill: none;
-      stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
-    }
-    .pillar-text {
-      font-family: var(--font-body);
-      font-size: 14px; font-weight: 400;
-      color: rgba(245,242,235,0.75);
-      line-height: 1.45;
-    }
-    .pillar-text strong {
-      color: var(--color-warm-white);
-      font-weight: 500;
+      margin-bottom: 18px;
     }
 
     .about-divider {
       height: 1px;
-      background: var(--color-charcoal);
-      margin-bottom: 28px;
+      background: rgba(255,255,255,0.1);
+      margin-bottom: 18px;
     }
 
     .about-social {
       display: flex; align-items: center; gap: 8px;
       font-family: var(--font-body);
       font-size: 12px; font-weight: 500;
-      color: var(--color-slate);
+      color: rgba(245,242,235,0.45);
       letter-spacing: 0.04em;
       text-decoration: none;
       transition: color 0.2s;
@@ -1277,7 +1283,6 @@
       white-space: nowrap;
       z-index: 3;
     }
-
     /* ── About scroll reveal for left col ── */
     .about-left-inner {
       opacity: 0;
@@ -1331,38 +1336,29 @@
       <div class="about-right">
         <div class="about-card" id="about-card">
 
-          <div class="about-card-label">Performance Marketer</div>
-
-          <div class="about-name">Rihan</div>
-          <div class="about-role">Founder, FullFunnel.Co.In</div>
-
-          <div class="about-pillars">
-            <div class="about-pillar">
-              <div class="pillar-icon">
-                <svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-              </div>
-              <div class="pillar-text"><strong>Meta Ads</strong> — Structured campaigns built for ROAS, not just reach</div>
+          <!-- Photo -->
+          <div class="about-photo-wrap">
+            <div class="about-photo-placeholder">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
             </div>
-            <div class="about-pillar">
-              <div class="pillar-icon">
-                <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
-              </div>
-              <div class="pillar-text"><strong>Shopify</strong> — Stores engineered for speed and conversion</div>
-            </div>
-            <div class="about-pillar">
-              <div class="pillar-icon">
-                <svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
-              </div>
-              <div class="pillar-text"><strong>Full-Funnel Strategy</strong> — Systems that scale, not one-off wins</div>
-            </div>
+            <img src="rihan.jpg" alt="Rihan — Founder, FullFunnel.Co.In" loading="lazy"
+                 onload="this.previousElementSibling.style.display='none'"
+                 onerror="this.style.display='none'" />
           </div>
 
-          <div class="about-divider"></div>
+          <!-- Identity overlay -->
+          <div class="about-card-overlay">
+            <div class="about-card-label">Performance Marketer</div>
+            <div class="about-name">Rihan</div>
+            <div class="about-role">Founder, FullFunnel.Co.In</div>
+            <div class="about-divider"></div>
+            <a id="about-instagram" href="https://instagram.com/fullfunnelco" target="_blank" class="about-social">
+              <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor"/></svg>
+              <span id="about-instagram-handle">@fullfunnelco</span>
+            </a>
+          </div>
 
-          <a id="about-instagram" href="https://instagram.com/fullfunnelco" target="_blank" class="about-social">
-            <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor"/></svg>
-            <span id="about-instagram-handle">@fullfunnelco</span>
-          </a>
+        </div>
         </div>
 
         <!-- Floating tag chip -->
@@ -1776,11 +1772,11 @@
 
           <div class="form-row">
             <div class="form-field">
-              <label class="form-label" for="cf-name">Name <span class="req">*</span></label>
-              <input class="form-input" id="cf-name" name="name" type="text" placeholder="Your name" autocomplete="name" />
+              <label class="form-label" for="cf-name">Full Name <span class="req">*</span></label>
+              <input class="form-input" id="cf-name" name="name" type="text" placeholder="Your full name" autocomplete="name" />
             </div>
             <div class="form-field">
-              <label class="form-label" for="cf-email">Email <span class="req">*</span></label>
+              <label class="form-label" for="cf-email">Email Address <span class="req">*</span></label>
               <input class="form-input" id="cf-email" name="email" type="email" placeholder="you@example.com" autocomplete="email" />
             </div>
           </div>
@@ -1809,17 +1805,34 @@
             </div>
           </div>
 
+          <div class="form-row single" style="margin-bottom:20px">
+            <div class="form-field">
+              <label class="form-label" for="cf-adspend">Estimated Monthly Ad Spend <span class="req">*</span></label>
+              <div class="form-select-wrap">
+                <select class="form-select" id="cf-adspend" name="ad-spend">
+                  <option value="" disabled selected>Select your ad spend range</option>
+                  <option value="lt-15k">Less than ₹15K</option>
+                  <option value="15k-30k">₹15K–₹30K</option>
+                  <option value="30k-60k">₹30K–₹60K</option>
+                  <option value="60k-1l">₹60K–₹1L</option>
+                  <option value="1l-plus">₹1L+</option>
+                </select>
+              </div>
+              <span style="font-family:var(--font-body);font-size:11px;font-weight:400;color:var(--color-slate);opacity:0.55;letter-spacing:0.02em;margin-top:4px;display:block;">Ad spend only. Management fees are separate.</span>
+            </div>
+          </div>
+
           <div class="form-row single">
             <div class="form-field">
               <label class="form-label" for="cf-message">Message <span style="text-transform:none;letter-spacing:0;font-weight:400;opacity:0.45;">(optional)</span></label>
-              <textarea class="form-textarea" id="cf-message" name="message" placeholder="Tell me about your brand, your goals, or where you're stuck…"></textarea>
+              <textarea class="form-textarea" id="cf-message" name="message" placeholder="Briefly describe your business, goals, and current challenges."></textarea>
             </div>
           </div>
 
           <div class="form-footer">
             <div class="form-respond-note">
               <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              We typically respond within 48 hours.
+              We typically respond within 24 hours.
             </div>
             <button class="btn-submit" id="cf-submit" type="button">
               Submit <span class="arr">→</span>
@@ -1833,7 +1846,7 @@
             <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
           </div>
           <div class="success-title">Message Sent.</div>
-          <p class="success-msg">Thanks for reaching out — I'll be in touch within 48 hours.</p>
+          <p class="success-msg">Thanks for reaching out — I'll be in touch within 24 hours.</p>
         </div>
 
       </div>
@@ -1859,6 +1872,7 @@
           document.getElementById('cf-email'),
           document.getElementById('cf-phone'),
           document.getElementById('cf-help'),
+          document.getElementById('cf-adspend'),
         ];
 
         let hasError = false;
